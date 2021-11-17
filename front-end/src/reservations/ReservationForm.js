@@ -170,7 +170,21 @@ function ReservationForm({
                 />
                 <br></br>
 
+                <button className="btn btn-primary ml-2" type="submit">
+                    Submit
+                </button> 
 
+                <button 
+                    className="btn btn-secondary" 
+                    /* On Click, use anonymous event handlerto go back one page in history */
+					onClick={(e) => {
+						e.preventDefault();
+						history.go(-1);
+					}}
+                >
+                    Cancel{" "}
+                </button>
+   
             </form> {/* End of Form for modifying or creating a reservation */}
         </div>
     );
