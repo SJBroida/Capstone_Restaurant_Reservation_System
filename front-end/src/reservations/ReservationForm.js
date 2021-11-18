@@ -1,19 +1,6 @@
-/*
-The /reservations/new page will
-have the following required and not-nullable fields:
-First name: <input name="first_name" />
-Last name: <input name="last_name" />
-Mobile number: <input name="mobile_number" />
-Date of reservation: <input name="reservation_date" />
-Time of reservation: <input name="reservation_time" />
-Number of people in the party, which must be at least 1 person. <input name="people" />
-display a Submit button that, when clicked, saves the new reservation, then displays the /dashboard page for the date of the new reservation
-display a Cancel button that, when clicked, returns the user to the previous page
-display any error messages returned from the API
-*/
-
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
+import { createReservation } from "../utils/api";
 
 function ReservationForm({ 
     editFirstName = "",
@@ -30,9 +17,9 @@ function ReservationForm({
     const[firstName, setFirstName] = useState("");
     const[lastName, setLastName] = useState("");
     const[mobileNumber, setMobileNumber] = useState("");
-    const[reservationDate, setReservationDate] = useState("");
-    const[reservationTime, setReservationTime] = useState("");
-    const[partyPeople, setPartyPeople] = useState("");
+    const[reservationDate, setReservationDate] = useState(null);
+    const[reservationTime, setReservationTime] = useState(null);
+    const[partyPeople, setPartyPeople] = useState(null);
 
     // Variables for use in form handling
     const newReservation = {
@@ -43,6 +30,7 @@ function ReservationForm({
         reservationTime: reservationTime,
         partyPeople: partyPeople
     };
+
     const updatedReservation = {
         firstName: firstName,
         lastName: lastName,
@@ -82,6 +70,17 @@ function ReservationForm({
     // Event handler for when creating a reservation
 	const handleCreateSubmit = async function (event) {
 		event.preventDefault();
+        const formattedReservation = {
+            first_name: newReservation.firstName,
+            last_name: newReservation.lastName,
+            mobile_number: newReservation.mobileNumber,
+            reservation_date: newReservation.reservationDate,
+            reservation_time: newReservation.reservationTime,
+            people: Number(newReservation.partyPeople)
+        }
+        let result = await createReservation(formattedReservation);
+		let reservationDate = result.reservation_date;
+		history.push(`/dashboard?date=${reservationDate}`);
 	};
 
     // Event handler for when editing a reservation
@@ -170,8 +169,11 @@ function ReservationForm({
                 />
                 <br></br>
 
-                <button className="btn btn-primary ml-2" type="submit">
-                    Submit
+                <button 
+                    className="btn btn-primary ml-2" 
+                    type="submit"
+                >
+                    {isNew ? "Submit" : "Save"}
                 </button> 
 
                 <button 
@@ -182,7 +184,7 @@ function ReservationForm({
 						history.go(-1);
 					}}
                 >
-                    Cancel{" "}
+                    Cancel
                 </button>
    
             </form> {/* End of Form for modifying or creating a reservation */}
