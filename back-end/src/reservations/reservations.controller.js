@@ -14,6 +14,23 @@ async function reservationExists(req, res, next) {
 }
 */
 
+/**
+ * Formats a Date object as YYYY-MM-DD.
+ *
+ * This function is *not* exported because the UI should generally avoid working directly with Date instance.
+ * You may export this function if you need it.
+ *
+ * @param date
+ *  an instance of a date object
+ * @returns {string}
+ *  the specified Date formatted as YYYY-MM-DD
+ */
+ function asDateString(date) {
+  return `${date.getFullYear().toString(10)}-${(date.getMonth() + 1)
+    .toString(10)
+    .padStart(2, "0")}-${date.getDate().toString(10).padStart(2, "0")}`;
+}
+
 async function reservationValid(req, res, next) {
 
   if(!req.body.data) {
@@ -60,8 +77,58 @@ async function reservationValid(req, res, next) {
   return next({ status: 400, message: `One or more inputs are invalid: ${errorsArray.join(", ")}` });
 }
 
-async function create(req, res) {
+async function validFuture(req, res, next) {
+  // Create an array to store any errors in case the reservation is invalid
+  const errorsArray = [];
 
+  // Obtain a string of today's date
+  const currentDate = asDateString(new Date());
+  // Break down the string to separate Year, Month, and Day
+  let [ currentYear, currentMonth, currentDay ] = currentDate.split("-");
+  // Change the currentYear, currentMonth, and currentDay into numbers
+  currentYear = Number(currentYear);
+  currentMonth = Number(currentMonth);
+  currentDay = Number(currentDay);
+
+  // Obtain a string of the reservation date
+  const theReservationDate = res.locals.reservation.reservation_date;
+  // Break down the string to separate Year, Month, and Day
+  let [ reservationYear, reservationMonth, reservationDay ] = theReservationDate.split("-");
+  // Change the currentYear, currentMonth, and currentDay into numbers
+  reservationYear = Number(reservationYear);
+  reservationMonth = Number(reservationMonth);
+  reservationDay = Number(reservationDay);
+
+  // Convert the string of the Reservation Date to a new Date object.
+  const reservationDateObject = new Date(theReservationDate);
+  // Figure out which day of the week that day is.
+  const theDay = reservationDateObject.getDay() + 1;
+
+  // Check if the reservation date is on a Tuesday
+  if(theDay === 2) {
+    errorsArray.push(`The restaurant is closed on Tuesday!`);
+  }
+
+  // Check if the reservation date is some time in the past
+  if(reservationYear < currentYear) {
+    errorsArray.push(`You must schedule reservations for some time in the future!`);
+  } else if(reservationYear === currentYear && reservationMonth < currentMonth) {
+    errorsArray.push(`You must schedule reservations for some time in the future!`);
+  } else if(reservationMonth === currentMonth && reservationDay < currentDay) {
+    errorsArray.push(`You must schedule reservations for some time in the future!`);
+  }
+
+  // If there are no errors reported, continue onward
+  if (errorsArray.length === 0) {
+    res.locals.reservation = newReservation;
+    return next();
+  }
+
+  // If an error was located, throw the error message with status 400
+  return next({ status: 400, message: `There are issues with your reservation: ${errorsArray.join(", ")}` });
+}
+
+async function create(req, res) {
   const newReservation = res.locals.reservation;
   // Call the create method from reservations.service
   const createdReservation = await service.create(newReservation);
@@ -80,6 +147,6 @@ async function list(req, res) {
 }
 
 module.exports = {
-  create: [reservationValid, asyncErrorBoundary(create)],
+  create: [reservationValid, validFuture, asyncErrorBoundary(create)],
   list: asyncErrorBoundary(list),
 };
