@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { createReservation } from "../utils/api";
+import ErrorAlert from "../layout/ErrorAlert.js";
 
 function ReservationForm({ 
     editFirstName = "",
@@ -13,87 +14,48 @@ function ReservationForm({
     isNew
 }) {
 
+    // UseState for Error Handling
+    const[error, setError] = useState(null);
+
     // UseStates for Reservation Fields
-    const[firstName, setFirstName] = useState("");
-    const[lastName, setLastName] = useState("");
-    const[mobileNumber, setMobileNumber] = useState("");
-    const[reservationDate, setReservationDate] = useState(null);
-    const[reservationTime, setReservationTime] = useState(null);
-    const[partyPeople, setPartyPeople] = useState(null);
+    const[reservation, setReservation] = useState({
+        first_name: "",
+        last_name: "",
+        mobile_number: "",
+        reservation_date: "",
+        reservation_time: "",
+        people: ""
+    });
 
-    // Variables for use in form handling
-    const newReservation = {
-        firstName: firstName,
-        lastName: lastName,
-        mobileNumber: mobileNumber,
-        reservationDate: reservationDate,
-        reservationTime: reservationTime,
-        partyPeople: partyPeople
-    };
-
-    const updatedReservation = {
-        firstName: firstName,
-        lastName: lastName,
-        mobileNumber: mobileNumber,
-        reservationDate: reservationDate,
-        reservationTime: reservationTime,
-        partyPeople: partyPeople,
-        id: editId
-    };
     const history = useHistory();
-
-    // Event handlers for when changing reservation details
-    const handleFirstNameChange = (event) => setFirstName(event.target.value);
-    const handleLastNameChange = (event) => setLastName(event.target.value);
-    const handleMobileNumberChange = (event) => setMobileNumber(event.target.value);
-    const handleReservationDateChange = (event) => setReservationDate(event.target.value);
-    const handleReservationTimeChange = (event) => setReservationTime(event.target.value);
-    const handlePartyPeopleChange = (event) => setPartyPeople(event.target.value);
-
-    // Effect Hook to perform side effects from React Function
-    useEffect(() => {
-        setFirstName(editFirstName);
-        setLastName(editLastName);
-        setMobileNumber(editMobileNumber);
-        setReservationDate(editReservationDate);
-        setReservationTime(editReservationTime);
-        setPartyPeople(editPartyPeople);
-    }, [
-        editFirstName, 
-        editLastName, 
-        editMobileNumber, 
-        editReservationDate,
-        editReservationTime,
-        editPartyPeople
-    ]);
 
     // Event handler for when creating a reservation
 	const handleCreateSubmit = async function (event) {
 		event.preventDefault();
-        const formattedReservation = {
-            first_name: newReservation.firstName,
-            last_name: newReservation.lastName,
-            mobile_number: newReservation.mobileNumber,
-            reservation_date: newReservation.reservationDate,
-            reservation_time: newReservation.reservationTime,
-            people: Number(newReservation.partyPeople)
+        try {
+            let result = await createReservation(reservation);
+            let reservationDate = result.reservation_date;
+            history.push(`/dashboard?date=${reservationDate}`);
+        } catch(error) {
+            setError(error);
         }
-        let result = await createReservation(formattedReservation);
-		let reservationDate = result.reservation_date;
-		history.push(`/dashboard?date=${reservationDate}`);
 	};
 
-    // Event handler for when editing a reservation
-    const handleEditSubmit = async function (event) {
-		event.preventDefault();
-	};
-
+    // Handler for changes to various fields
+    const handleChange = ({ target }) => {
+        setReservation({
+            ...reservation,
+            [target.name]: target.name === "people" ? Number(target.value) : target.value,
+        });
+    };
+    
     // HTML to return
     return (
         <div>
+            <ErrorAlert error={error} />
             <form
                 /* Determine which event handler to use when form is submitted */
-                onSubmit={isNew ? handleCreateSubmit : handleEditSubmit}
+                onSubmit={handleCreateSubmit}
             >
                 <label>
                     First Name
@@ -102,8 +64,8 @@ function ReservationForm({
                     id="firstName"
                     type="text"
                     name="first_name"
-                    onChange={handleFirstNameChange} 
-                    value={firstName}
+                    onChange={handleChange} 
+                    value={reservation.first_name}
                 />
                 <br></br>
 
@@ -114,8 +76,8 @@ function ReservationForm({
                     id="lastName"
                     type="text"
                     name="last_name"
-                    onChange={handleLastNameChange} 
-                    value={lastName}
+                    onChange={handleChange} 
+                    value={reservation.last_name}
                 />
                 <br></br>
 
@@ -125,8 +87,8 @@ function ReservationForm({
                 <input 
                     id="mobileNumber"
                     name="mobile_number"
-                    onChange={handleMobileNumberChange} 
-                    value={mobileNumber}
+                    onChange={handleChange} 
+                    value={reservation.mobile_number}
                 />
                 <br></br>
 
@@ -137,8 +99,8 @@ function ReservationForm({
                     id="reservationDate"
                     type="date"
                     name="reservation_date" 
-                    onChange={handleReservationDateChange}
-                    value={reservationDate}
+                    onChange={handleChange}
+                    value={reservation.reservation_date}
                     placeholder="YYYY-MM-DD" 
                     pattern="\d{4}-\d{2}-\d{2}"
                 />
@@ -151,8 +113,8 @@ function ReservationForm({
                     id="reservationTime"
                     type="time" 
                     name="reservation_time" 
-                    onChange={handleReservationTimeChange}
-                    value={reservationTime}
+                    onChange={handleChange}
+                    value={reservation.reservation_time}
                     placeholder="HH:MM" 
                     pattern="[0-9]{2}:[0-9]{2}"
                 />
@@ -164,8 +126,8 @@ function ReservationForm({
                 <input 
                     id="partyPeople"
                     name="people" 
-                    onChange={handlePartyPeopleChange}
-                    value={partyPeople}
+                    onChange={handleChange}
+                    value={reservation.people}
                 />
                 <br></br>
 
@@ -173,7 +135,7 @@ function ReservationForm({
                     className="btn btn-primary ml-2" 
                     type="submit"
                 >
-                    {isNew ? "Submit" : "Save"}
+                    Submit
                 </button> 
 
                 <button 

@@ -120,7 +120,6 @@ async function validFuture(req, res, next) {
 
   // If there are no errors reported, continue onward
   if (errorsArray.length === 0) {
-    res.locals.reservation = newReservation;
     return next();
   }
 
