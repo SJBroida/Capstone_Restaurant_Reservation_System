@@ -116,6 +116,63 @@ async function validFuture(req, res, next) {
     errorsArray.push(`You must schedule reservations for some time in the future!`);
   } else if(reservationMonth === currentMonth && reservationDay < currentDay) {
     errorsArray.push(`You must schedule reservations for some time in the future!`);
+  } else if(reservationMonth === currentMonth && reservationDay === currentDay) {
+    res.locals.today = true;
+  }
+
+  // If there are no errors reported, continue onward
+  if (errorsArray.length === 0) {
+    return next();
+  }
+
+  // If an error was located, throw the error message with status 400
+  return next({ status: 400, message: `There are issues with your reservation: ${errorsArray.join(", ")}` });
+}
+
+async function validTime(req, res, next) {
+  // Create an array to store any errors in case the reservation is invalid
+  const errorsArray = [];
+
+  // Create a constant in number of minutes for when reservations start
+  // example: 630 = (10 x 60) + 30 -> 10:30 AM
+  const reservationsOpen = 630;
+
+  // Create a constant in number of minutes for when reservations close
+  // example: 1290 = (21 x 60) + 30 -> 21:30 -> 9:30 PM
+  const reservationsClose = 1290;
+
+  // Create a constant representing the current date and time.
+  const currentDate = new Date();
+
+  // Obtain the current hours
+  const currentHours = currentDate.getHours();
+
+  // Obtain the current minutes
+  const currentMinutes = currentDate.getMinutes();
+
+  // Calculate the current time in minutes
+  const currentTimeInMin = (currentHours * 60) + currentMinutes;
+
+  // Obtain the listed time for the reservation.
+  const reservationTime = res.locals.reservation.reservation_time;
+
+  // Break down the string to separate Year, Month, and Day
+  let [ reservationHour, reservationMinute ] = reservationTime.split(":");
+
+  // Change the reservationHour and reservationMinute into numbers
+  reservationHour = Number(reservationHour);
+  reservationMinute = Number(reservationMinute);
+
+  // Convert the hours and minutes into only minutes.
+  const reservationTimeInMin = (reservationHour * 60) + reservationMinute;
+
+  // Check if the reservation date is some time in the past
+  if(reservationTimeInMin < reservationsOpen) {
+    errorsArray.push(`The restaurant does not open before 10:30 AM.  Please select another time.`);
+  } else if(reservationTimeInMin > reservationsClose) {
+    errorsArray.push(`No more reservations after 9:30 PM, please.  The restaurant will close at 10:30`);
+  } else if(res.locals.today && reservationTimeInMin < currentTimeInMin) {
+    errorsArray.push(`Please select a later time today.`)
   }
 
   // If there are no errors reported, continue onward
@@ -146,6 +203,6 @@ async function list(req, res) {
 }
 
 module.exports = {
-  create: [reservationValid, validFuture, asyncErrorBoundary(create)],
+  create: [reservationValid, validFuture, validTime, asyncErrorBoundary(create)],
   list: asyncErrorBoundary(list),
 };
