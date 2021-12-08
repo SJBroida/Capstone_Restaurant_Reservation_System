@@ -94,6 +94,27 @@ async function validSeating(req, res, next) {
   return next({ status: 400, message: `There are one or more issues: ${errorsArray.join(", ")}` });
 }
 
+async function isOccupied(req, res, next) {
+
+  // Collect the table ID from the parameters
+  const tableId = req.params.table_id;
+  // Fetch the table information associated with the table ID
+  const theTable = await service.read(tableId);
+
+  if(!theTable) {
+    return next({ status: 404, message: `Table # ${tableId} does not exist.` });
+  }
+
+  // Determine if there is a reservation already seated
+  const tableReservationId = theTable.reservation_id;
+
+  if(!tableReservationId) {
+    return next({ status: 400, message: `Table # ${tableId} is not occupied.` });
+  }
+
+  return next();
+}
+
 /**
  * Create a new table to be added to the table database
  * @param {*} req 
@@ -110,6 +131,8 @@ async function create(req, res) {
 
 /**
  * List handler for reservation resources
+ * @param {*} req 
+ * @param {*} res 
  */
 async function list(req, res) {
   let data = [];
@@ -118,7 +141,7 @@ async function list(req, res) {
 }
 
 /**
- * 
+ * Updates the table with the given reservation ID
  * @param {*} req 
  * @param {*} res 
  */
@@ -133,8 +156,25 @@ async function seat(req, res) {
   res.status(200).json({ data: theUpdate });
 }
 
+/**
+ * Updates the table so that the reservation_id is null
+ * @param {*} req 
+ * @param {*} res 
+ */
+async function clear(req, res) {
+
+  // Collect the tableID passed through the request parameters
+  const tableId = req.params.table_id;
+
+  const clearedTable = await service.clear(tableId);
+
+  // Return with the updated table along with status 200
+  res.status(200).json({ data: clearedTable });
+}
+
 module.exports = {
   create: [tableValid, asyncErrorBoundary(create)],
+  clear: [asyncErrorBoundary(isOccupied), asyncErrorBoundary(clear)],
   list: asyncErrorBoundary(list),
   seat: [asyncErrorBoundary(validSeating), asyncErrorBoundary(seat)],
 };

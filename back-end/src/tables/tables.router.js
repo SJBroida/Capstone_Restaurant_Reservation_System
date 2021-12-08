@@ -6,7 +6,7 @@
 const router = require("express").Router();
 const controller = require("./tables.controller");
 
-router.route("/:table_id/seat").put(controller.seat);
+router.route("/:table_id/seat").put(controller.seat).delete(controller.clear);
 
 router.route("/").get(controller.list).post(controller.create);
 
