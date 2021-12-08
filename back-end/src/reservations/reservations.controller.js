@@ -1,19 +1,6 @@
 const service = require("./reservations.service.js");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
-/*
-async function reservationExists(req, res, next) {
-  const { postId } = req.params;
-
-  const post = await service.read(postId);
-  if (post) {
-    res.locals.post = post;
-    return next();
-  }
-  return next({ status: 404, message: `Post cannot be found.` });
-}
-*/
-
 /**
  * Formats a Date object as YYYY-MM-DD.
  *
@@ -31,6 +18,13 @@ async function reservationExists(req, res, next) {
     .padStart(2, "0")}-${date.getDate().toString(10).padStart(2, "0")}`;
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 async function reservationValid(req, res, next) {
 
   if(!req.body.data) {
@@ -77,6 +71,13 @@ async function reservationValid(req, res, next) {
   return next({ status: 400, message: `One or more inputs are invalid: ${errorsArray.join(", ")}` });
 }
 
+/**
+ * Verify that user is attempting to make a reservation in the future.
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 async function validFuture(req, res, next) {
   // Create an array to store any errors in case the reservation is invalid
   const errorsArray = [];
@@ -129,6 +130,13 @@ async function validFuture(req, res, next) {
   return next({ status: 400, message: `There are issues with your reservation: ${errorsArray.join(", ")}` });
 }
 
+/**
+ * Verify that user is making reservation at a valid time when restaurant is open.
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 async function validTime(req, res, next) {
   // Create an array to store any errors in case the reservation is invalid
   const errorsArray = [];
@@ -184,6 +192,11 @@ async function validTime(req, res, next) {
   return next({ status: 400, message: `There are issues with your reservation: ${errorsArray.join(", ")}` });
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
 async function create(req, res) {
   const newReservation = res.locals.reservation;
   // Call the create method from reservations.service
@@ -194,6 +207,8 @@ async function create(req, res) {
 
 /**
  * List handler for reservation resources
+ * @param {*} req 
+ * @param {*} res 
  */
 async function list(req, res) {
   const { date } = req.query;
@@ -202,7 +217,27 @@ async function list(req, res) {
   res.json({ data });
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
+async function read(req, res, next) {
+  // Collect the reservation ID passed through the request parameters
+  const reservationId = req.params.reservation_Id;
+  const data = await service.read(reservationId);
+
+  if(!data) {
+    return next({ status: 404, message: `No reservation with ID # ${reservationId} exists.` });
+  }
+
+  res.status(200).json({ data });
+}
+
 module.exports = {
   create: [reservationValid, validFuture, validTime, asyncErrorBoundary(create)],
   list: asyncErrorBoundary(list),
+  read: asyncErrorBoundary(read),
 };

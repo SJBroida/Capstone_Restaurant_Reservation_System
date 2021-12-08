@@ -6,7 +6,10 @@ import NotFound from "./NotFound";
 import { today } from "../utils/date-time";
 import useQuery from "../utils/useQuery";
 
+// Import forms for specific routes
 import CreateReservation from "../reservations/CreateReservation.js";
+import CreateTable from "../tables/CreateTable.js";
+import ReservationSeat from "../reservations/ReservationSeat.js";
 
 /**
  * Defines all the routes for the application.
@@ -29,8 +32,14 @@ function Routes() {
       <Route exact={true} path="/reservations/new">
         <CreateReservation />
       </Route>
+      <Route path="/reservations/:reservation_id/seat">
+        <ReservationSeat />
+      </Route>
       <Route path="/reservations">
         <Redirect to={"/dashboard"} />
+      </Route>
+      <Route exact={true} path="/tables/new">
+        <CreateTable />
       </Route>
       <Route path="/dashboard">
         {/*Made condition where it passes through the current date or today's date*/}

@@ -68,6 +68,18 @@ export async function listReservations(params, signal) {
 }
 
 /**
+ * Retrieves all existing tables.
+ * @returns {Promise<[table]>}
+ *  a promise that resolves to a possibly empty array of a table saved in the database.
+ */
+
+export async function listTables(signal) {
+  const url = new URL(`${API_BASE_URL}/tables`);
+
+  return await fetchJson(url, { headers, signal }, []);
+}
+
+/**
  * Saves reservation to the database.
  * There is no validation done on the reservation object, any object will be saved.
  * @param reservation
@@ -83,6 +95,51 @@ export async function listReservations(params, signal) {
     method: "POST",
     headers,
     body: JSON.stringify({data: reservation}),
+    signal,
+  };
+  return await fetchJson(url, options, {});
+}
+
+/**
+ * Saves table to the database.
+ * There is no validation done on the table object, any object will be saved.
+ * @param table
+ *  the table to save, which must not have an `id` property
+ * @param signal
+ *  optional AbortController.signal
+ * @returns {Promise<table>}
+ *  a promise that resolves the saved table, which will now have an `id` property.
+ */
+ export async function createTable(table, signal) {
+  // Uncertain what to modify the URL to.  Should check in.
+  const url = `${API_BASE_URL}/tables`;
+  const options = {
+    method: "POST",
+    headers,
+    body: JSON.stringify({data: table}),
+    signal,
+  };
+  return await fetchJson(url, options, {});
+}
+
+/**
+ * Update table to seat a party at it.
+ * There is no validation done on the table object, any object will be saved.
+ * @param reservation_id
+ *  the reservation ID # to be seated
+ * @param table_id
+ * the table ID # to be seat the reservation at
+ * @param signal
+ *  optional AbortController.signal
+ * @returns {Promise<table>}
+ *  a promise that resolves the updated table.
+ */
+ export async function seatReservation(reservation_id, table_id, signal) {
+  const url = `${API_BASE_URL}/tables/${table_id}/seat`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify( { data: { reservation_id } } ),
     signal,
   };
   return await fetchJson(url, options, {});
