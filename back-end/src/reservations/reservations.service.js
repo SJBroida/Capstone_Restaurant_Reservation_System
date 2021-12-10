@@ -13,21 +13,33 @@ function list(date) {
     return knex("reservations")
         .select("*")
         .where({reservation_date: date})
+        .whereNot({ status: "finished" })
         .orderBy("reservation_time");
 }
 
 /**
- * When given a reservation ID, select the row from the database that contains the reservation ID
+ * Select a reservation with the given reservation ID
+ * @param {*} reservation_id 
+ * The reservation ID used to look up the reservation
+ * @returns 
  */
- function read(reservation_id) {
+function read(reservation_id) {
     return knex("reservations")
         .select("*")
         .where({ reservation_id })
         .first();
 }
 
+async function update(reservation_id, status) {
+    return knex("reservations")
+        .select("*")
+        .where({ reservation_id })
+        .update({ status }, "*");
+}
+
 module.exports = {
     create,
     list,
     read,
+    update,
 };

@@ -18,6 +18,20 @@ const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
     .padStart(2, "0")}-${date.getDate().toString(10).padStart(2, "0")}`;
 }
 
+async function reservationExists(req, res, next) {
+    // Collect the reservation ID passed through the request parameters
+    const reservationId = req.params.reservation_id;
+    const data = await service.read(reservationId);
+  
+    if(!data) {
+      return next({ status: 404, message: `No reservation with ID # ${reservationId} exists.` });
+    }
+  
+    res.locals.reservation = data;
+    return next();
+
+}
+
 /**
  * 
  * @param {*} req 
@@ -62,6 +76,12 @@ async function reservationValid(req, res, next) {
   }
   if(!newReservation.people || (typeof newReservation.people) !== "number") {
     errorsArray.push("people");
+  }
+  if(newReservation.status === "seated") {
+    errorsArray.push("This reservation has already been seated");
+  }
+  if(newReservation.status === "finished") {
+    errorsArray.push("This reservation has already finished")
   }
 
   if (errorsArray.length === 0) {
@@ -119,6 +139,28 @@ async function validFuture(req, res, next) {
     errorsArray.push(`You must schedule reservations for some time in the future!`);
   } else if(reservationMonth === currentMonth && reservationDay === currentDay) {
     res.locals.today = true;
+  }
+
+  // If there are no errors reported, continue onward
+  if (errorsArray.length === 0) {
+    return next();
+  }
+
+  // If an error was located, throw the error message with status 400
+  return next({ status: 400, message: `There are issues with your reservation: ${errorsArray.join(", ")}` });
+}
+
+function validStatus(req, res, next) {
+  // Create an array to store any errors in case the reservation status is invalid
+  const errorsArray = [];
+
+  const theCurrentStatus = res.locals.reservation.status;
+  const theNewStatus = req.body.data.status;
+
+  if(theCurrentStatus === "finished") {
+    errorsArray.push("A finished reservation cannot be updated");
+  } else if(theNewStatus !== "booked" && theNewStatus !== "seated" && theNewStatus !== "finished") {
+    errorsArray.push("The status is unknown or invalid");
   }
 
   // If there are no errors reported, continue onward
@@ -218,26 +260,35 @@ async function list(req, res) {
 }
 
 /**
- * 
+ * Returns the reservation that has the reservation ID from the parameters
  * @param {*} req 
  * @param {*} res 
- * @param {*} next 
  * @returns 
  */
-async function read(req, res, next) {
+function read(req, res) {
+
+  res.status(200).json({ data: res.locals.reservation});
+
+}
+
+async function updateStatus(req, res) {
+  
   // Collect the reservation ID passed through the request parameters
-  const reservationId = req.params.reservation_Id;
-  const data = await service.read(reservationId);
+  let reservationId = req.params.reservation_id;
+  reservationId = Number(reservationId);
 
-  if(!data) {
-    return next({ status: 404, message: `No reservation with ID # ${reservationId} exists.` });
-  }
+  // Collect the new status passed through the request body.
+  const newStatus = req.body.data.status;
+  
+  // Make the service call to "put" the new status to the database
+  const updatedReservation = await service.update(reservationId, newStatus);
 
-  res.status(200).json({ data });
+  res.status(200).json({ data: updatedReservation[0] });
 }
 
 module.exports = {
   create: [reservationValid, validFuture, validTime, asyncErrorBoundary(create)],
   list: asyncErrorBoundary(list),
-  read: asyncErrorBoundary(read),
+  read: [asyncErrorBoundary(reservationExists), read],
+  update: [asyncErrorBoundary(reservationExists), validStatus, asyncErrorBoundary(updateStatus)],
 };

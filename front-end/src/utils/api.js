@@ -30,11 +30,16 @@ headers.append("Content-Type", "application/json");
  */
 async function fetchJson(url, options, onCancel) {
   try {
+    console.log(url, options);
     const response = await fetch(url, options);
     if (response.status === 204) {
       return null;
     }
-
+    if (response.status === 404) {
+      console.log("The response came back as a 404");
+      console.log(response.text());
+      return null;
+    }
     const payload = await response.json();
 
     if (payload.error) {
@@ -68,18 +73,6 @@ export async function listReservations(params, signal) {
 }
 
 /**
- * Retrieves all existing tables.
- * @returns {Promise<[table]>}
- *  a promise that resolves to a possibly empty array of a table saved in the database.
- */
-
-export async function listTables(signal) {
-  const url = new URL(`${API_BASE_URL}/tables`);
-
-  return await fetchJson(url, { headers, signal }, []);
-}
-
-/**
  * Saves reservation to the database.
  * There is no validation done on the reservation object, any object will be saved.
  * @param reservation
@@ -94,10 +87,42 @@ export async function listTables(signal) {
   const options = {
     method: "POST",
     headers,
-    body: JSON.stringify({data: reservation}),
+    body: JSON.stringify( { data: reservation } ),
     signal,
   };
   return await fetchJson(url, options, {});
+}
+
+/**
+ * Change the status of the reservation
+ * The status can be either "booked", "seated", or "finished"
+ * @param {*} reservation_id 
+ * The reservation ID tied to the reservation where the status shall be changed.
+ * @param {*} status 
+ * The new status being passed through; a string of either "seated" or "finished"
+ * @param {*} signal 
+ * @returns 
+ */
+export async function changeStatus(reservation_id, status, signal) {
+  const url = `${API_BASE_URL}/reservations/${reservation_id}/status`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify( { data: { status } } ),
+    signal,
+  };
+  return await fetchJson(url, options, {});
+}
+
+/**
+ * Retrieves all existing tables.
+ * @returns {Promise<[table]>}
+ *  a promise that resolves to a possibly empty array of a table saved in the database.
+ */
+export async function listTables(signal) {
+  const url = new URL(`${API_BASE_URL}/tables`);
+
+  return await fetchJson(url, { headers, signal }, []);
 }
 
 /**

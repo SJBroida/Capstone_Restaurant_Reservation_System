@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 
-import { listTables, seatReservation } from "../utils/api";
+import { changeStatus, listTables, seatReservation } from "../utils/api";
 
 // Import Table component to show all tables and their status
 import Table from "../tables/Table";
@@ -39,6 +39,7 @@ function ReservationSeat() {
         try {
             await seatReservation(reservationId, tableId);
             history.push(`/dashboard`);
+
         } catch(error) {
             setTableError(error);
         }
@@ -62,7 +63,7 @@ function ReservationSeat() {
                         onChange={handleChange}
                     >
                         {table.map((table) => {
-                            return <option value={table.table_id}>{table.table_name} - {table.capacity}</option>
+                            return <option key={table.table_id} value={table.table_id}>{table.table_name} - {table.capacity}</option>
                         })}
                     </select>
                 </label>

@@ -75,6 +75,9 @@ async function validSeating(req, res, next) {
   if(!theReservation) {
     return next({ status: 404, message: `There is no reservation with ID # ${reservationId}` });
   }
+  if(theReservation.status === "seated") {
+    return next({status: 400, message: `Reservation # ${reservationId} has already been seated.`})
+  }
 
   // Find out how many people are in the party
   const partyPeople = theReservation.people;
@@ -112,6 +115,8 @@ async function isOccupied(req, res, next) {
     return next({ status: 400, message: `Table # ${tableId} is not occupied.` });
   }
 
+  res.locals.table = theTable;
+
   return next();
 }
 
@@ -147,13 +152,13 @@ async function list(req, res) {
  */
 async function seat(req, res) {
   // Collect the tableID passed through the request parameters
-  const tableId = req.params.table_id;
+  const tableId = Number(req.params.table_id);
   // Collect the reservationID passed through the request body.
   const reservationId = req.body.data.reservation_id;
   // Call the seatUpdate function from the service to update the reservation_Id column
   const theUpdate = await service.seatUpdate(reservationId, tableId);
   // Return with the updated table along with status 200
-  res.status(200).json({ data: theUpdate });
+  res.status(200).json({ data: theUpdate[0] });
 }
 
 /**
@@ -162,11 +167,12 @@ async function seat(req, res) {
  * @param {*} res 
  */
 async function clear(req, res) {
-
   // Collect the tableID passed through the request parameters
-  const tableId = req.params.table_id;
+  const tableId = Number(req.params.table_id);
 
-  const clearedTable = await service.clear(tableId);
+  const reservationId = res.locals.table.reservation_id;
+
+  const clearedTable = await service.clear(tableId, reservationId);
 
   // Return with the updated table along with status 200
   res.status(200).json({ data: clearedTable });
