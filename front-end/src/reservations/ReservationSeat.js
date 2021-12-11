@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 
-import { changeStatus, listTables, seatReservation } from "../utils/api";
+import { listTables, seatReservation } from "../utils/api";
 
 // Import Table component to show all tables and their status
 import Table from "../tables/Table";

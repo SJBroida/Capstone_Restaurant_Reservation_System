@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { changeStatus, clearTable, listTables } from "../utils/api";
+import { clearTable, listTables } from "../utils/api";
 
 import ErrorAlert from "../layout/ErrorAlert";
 
@@ -23,7 +23,7 @@ function Table() {
       return () => abortController.abort();
     }
 
-    const handleClearTable = async function (table_id, reservation_id) {
+    const handleClearTable = async function (table_id) {
         try {
             const result = window.confirm("Is this table ready to seat new guests? This cannot be undone.");
             if (result) {

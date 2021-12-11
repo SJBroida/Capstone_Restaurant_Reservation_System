@@ -64,7 +64,7 @@ function ReservationForm({
                     id="firstName"
                     type="text"
                     name="first_name"
-                    onChange={handleChange} 
+                    onChange={handleChange}
                     value={reservation.first_name}
                 />
                 <br></br>

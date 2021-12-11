@@ -253,10 +253,21 @@ async function create(req, res) {
  * @param {*} res 
  */
 async function list(req, res) {
-  const { date } = req.query;
-  let data = [];
-  data = await service.list(date);
-  res.json({ data });
+  // Check to see if "date" is the key in query
+  if(req.query.date) {
+
+    const { date } = req.query;
+    let data = [];
+    data = await service.list(date);
+    res.json({ data });
+  // If it isn't "date", check to see if "mobile_number" is the key in the query
+  } else if(req.query.mobile_number) {
+
+    const { mobile_number } = req.query;
+    let data = [];
+    data = await service.search(mobile_number);
+    res.json({ data });
+  }
 }
 
 /**

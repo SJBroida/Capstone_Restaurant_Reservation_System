@@ -30,7 +30,6 @@ headers.append("Content-Type", "application/json");
  */
 async function fetchJson(url, options, onCancel) {
   try {
-    console.log(url, options);
     const response = await fetch(url, options);
     if (response.status === 204) {
       return null;
@@ -57,7 +56,7 @@ async function fetchJson(url, options, onCancel) {
 }
 
 /**
- * Retrieves all existing reservation.
+ * Retrieves all existing reservations.
  * @returns {Promise<[reservation]>}
  *  a promise that resolves to a possibly empty array of reservation saved in the database.
  */
@@ -94,21 +93,16 @@ export async function listReservations(params, signal) {
 }
 
 /**
- * Change the status of the reservation
- * The status can be either "booked", "seated", or "finished"
- * @param {*} reservation_id 
- * The reservation ID tied to the reservation where the status shall be changed.
- * @param {*} status 
- * The new status being passed through; a string of either "seated" or "finished"
+ * Searches for any reservations that contain the given mobile number.
+ * @param {*} mobile_number 
  * @param {*} signal 
  * @returns 
  */
-export async function changeStatus(reservation_id, status, signal) {
-  const url = `${API_BASE_URL}/reservations/${reservation_id}/status`;
+export async function searchReservation(mobile_number, signal) {
+  const url = `${API_BASE_URL}/reservations?mobile_number=${mobile_number}`;
   const options = {
-    method: "PUT",
+    method: "GET",
     headers,
-    body: JSON.stringify( { data: { status } } ),
     signal,
   };
   return await fetchJson(url, options, {});
@@ -136,7 +130,6 @@ export async function listTables(signal) {
  *  a promise that resolves the saved table, which will now have an `id` property.
  */
  export async function createTable(table, signal) {
-  // Uncertain what to modify the URL to.  Should check in.
   const url = `${API_BASE_URL}/tables`;
   const options = {
     method: "POST",
@@ -170,6 +163,12 @@ export async function listTables(signal) {
   return await fetchJson(url, options, {});
 }
 
+/**
+ * Removes a reservation_id from the table with the given table_id
+ * @param {*} table_id 
+ * @param {*} signal 
+ * @returns 
+ */
 export async function clearTable(table_id, signal) {
   const url = `${API_BASE_URL}/tables/${table_id}/seat`;
   const options = {

@@ -10,6 +10,7 @@ import useQuery from "../utils/useQuery";
 import CreateReservation from "../reservations/CreateReservation.js";
 import CreateTable from "../tables/CreateTable.js";
 import ReservationSeat from "../reservations/ReservationSeat.js";
+import ReservationSearch from "../reservations/ReservationSearch.js";
 
 /**
  * Defines all the routes for the application.
@@ -37,6 +38,9 @@ function Routes() {
       </Route>
       <Route path="/reservations">
         <Redirect to={"/dashboard"} />
+      </Route>
+      <Route path="/search">
+        <ReservationSearch />
       </Route>
       <Route exact={true} path="/tables/new">
         <CreateTable />
