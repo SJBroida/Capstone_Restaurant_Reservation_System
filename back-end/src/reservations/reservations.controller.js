@@ -46,7 +46,7 @@ async function reservationValid(req, res, next) {
   }
 
   // Fetch the information for the new reservation
-  const newReservation = ({
+  const theReservation = ({
     first_name,
     last_name,
     mobile_number,
@@ -59,33 +59,36 @@ async function reservationValid(req, res, next) {
   const dateFormat = /\d\d\d\d-\d\d-\d\d/;
   const timeFormat = /\d\d:\d\d/;
 
-  if(!newReservation.first_name || newReservation.first_name === "") {
+  if(!theReservation.first_name || theReservation.first_name === "") {
     errorsArray.push("first_name");
   }
-  if(!newReservation.last_name || newReservation.last_name === "") {
+  if(!theReservation.last_name || theReservation.last_name === "") {
     errorsArray.push("last_name");
   }
-  if(!newReservation.mobile_number || newReservation.mobile_number === "") {
+  if(!theReservation.mobile_number || theReservation.mobile_number === "") {
     errorsArray.push("mobile_number");
   }
-  if(!newReservation.reservation_date || !newReservation.reservation_date.match(dateFormat)) {
+  if(!theReservation.reservation_date || !theReservation.reservation_date.match(dateFormat)) {
     errorsArray.push("reservation_date");
   }
-  if(!newReservation.reservation_time || !newReservation.reservation_time.match(timeFormat)) {
+  if(!theReservation.reservation_time || !theReservation.reservation_time.match(timeFormat)) {
     errorsArray.push("reservation_time");
   }
-  if(!newReservation.people || (typeof newReservation.people) !== "number") {
+  if(!theReservation.people || (typeof theReservation.people) !== "number") {
     errorsArray.push("people");
   }
-  if(newReservation.status === "seated") {
+  if(theReservation.status === "seated") {
     errorsArray.push("This reservation has already been seated");
   }
-  if(newReservation.status === "finished") {
-    errorsArray.push("This reservation has already finished")
+  if(theReservation.status === "finished") {
+    errorsArray.push("This reservation has already finished");
+  }
+  if(theReservation.status === "cancelled") {
+    errorsArray.push("This reservation was cancelled");
   }
 
   if (errorsArray.length === 0) {
-    res.locals.reservation = newReservation;
+    res.locals.reservation = theReservation;
     return next();
   }
   return next({ status: 400, message: `One or more inputs are invalid: ${errorsArray.join(", ")}` });
@@ -159,7 +162,7 @@ function validStatus(req, res, next) {
 
   if(theCurrentStatus === "finished") {
     errorsArray.push("A finished reservation cannot be updated");
-  } else if(theNewStatus !== "booked" && theNewStatus !== "seated" && theNewStatus !== "finished") {
+  } else if(theNewStatus !== "booked" && theNewStatus !== "seated" && theNewStatus !== "finished" && theNewStatus !== "cancelled") {
     errorsArray.push("The status is unknown or invalid");
   }
 
@@ -247,6 +250,20 @@ async function create(req, res) {
   res.status(201).json({ data: createdReservation });
 }
 
+async function edit(req, res) {
+  // Collect the reservation ID passed through the request parameters
+  let reservationId = req.params.reservation_id;
+  reservationId = Number(reservationId);
+
+  // Collect the edited reservation passed through the request body.
+  const editedReservation = req.body.data;
+  
+  // Make the service call to "put" the edited reservation to the database
+  const updatedReservation = await service.edit(reservationId, editedReservation);
+
+  res.status(200).json({ data: updatedReservation[0] });
+}
+
 /**
  * List handler for reservation resources
  * @param {*} req 
@@ -283,7 +300,6 @@ function read(req, res) {
 }
 
 async function updateStatus(req, res) {
-  
   // Collect the reservation ID passed through the request parameters
   let reservationId = req.params.reservation_id;
   reservationId = Number(reservationId);
@@ -299,6 +315,7 @@ async function updateStatus(req, res) {
 
 module.exports = {
   create: [reservationValid, validFuture, validTime, asyncErrorBoundary(create)],
+  edit: [asyncErrorBoundary(reservationExists), reservationValid, validFuture, validTime, asyncErrorBoundary(edit)],
   list: asyncErrorBoundary(list),
   read: [asyncErrorBoundary(reservationExists), read],
   update: [asyncErrorBoundary(reservationExists), validStatus, asyncErrorBoundary(updateStatus)],

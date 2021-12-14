@@ -1,24 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { createReservation } from "../utils/api";
+import { createReservation, editReservation } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert.js";
 
-function ReservationForm({ 
-    editFirstName = "",
-    editLastName = "",
-    editMobileNumber = "",
-    editReservationDate = "",
-    editReservationTime = "",
-    editPartyPeople = "",
-    editId = "",
-    isNew
-}) {
+function ReservationForm( {props} ) {
+    const isNew = props.isNew;
 
     // UseState for Error Handling
     const[error, setError] = useState(null);
 
-    // UseStates for Reservation Fields
-    const[reservation, setReservation] = useState({
+    // Create empty Reservation object to load passedReservation into
+    const [reservation, setReservation] = useState({
         first_name: "",
         last_name: "",
         mobile_number: "",
@@ -29,42 +21,61 @@ function ReservationForm({
 
     const history = useHistory();
 
+    useEffect(() => {
+        if(!isNew && props.passedReservation.first_name) {
+            setReservation(props.passedReservation);
+        }
+    }, [isNew, props.passedReservation]);
+
     // Event handler for when creating a reservation
-	const handleCreateSubmit = async function (event) {
+	const handleSubmit = async function (event) {
 		event.preventDefault();
         try {
-            let result = await createReservation(reservation);
-            let reservationDate = result.reservation_date;
-            history.push(`/dashboard?date=${reservationDate}`);
+            // If isNew is true, then createReservation should be called.
+            if(isNew) {
+                let result = await createReservation(reservation);
+                let reservationDate = result.reservation_date;
+                history.push(`/dashboard?date=${reservationDate}`);
+            } else {
+                // If isNew is false, then editReservation should be called.
+                let result = await editReservation(reservation);
+                let reservationDate = result.reservation_date;
+                await props.loadDashboard();
+                history.push(`/dashboard?date=${reservationDate}`)
+            }
         } catch(error) {
+            console.log("An error has been caught in the handleSubmit function.")
             setError(error);
         }
 	};
 
-    // Handler for changes to various fields
+    /**
+     * Handler for changes to various fields
+     * @param {*} param0 
+     */
     const handleChange = ({ target }) => {
         setReservation({
             ...reservation,
             [target.name]: target.name === "people" ? Number(target.value) : target.value,
         });
     };
-    
+
     // HTML to return
     return (
         <div>
             <ErrorAlert error={error} />
-            <form
-                /* Determine which event handler to use when form is submitted */
-                onSubmit={handleCreateSubmit}
+            {/* Determine which event handler to use when form is submitted */}
+            <form       
+                onSubmit={handleSubmit}
             >
                 <label>
                     First Name
                 </label>
                 <input 
                     id="firstName"
-                    type="text"
                     name="first_name"
                     onChange={handleChange}
+                    type="text"
                     value={reservation.first_name}
                 />
                 <br></br>

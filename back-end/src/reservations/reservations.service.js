@@ -9,6 +9,27 @@ function create(reservation) {
       .then((createdRecords) => createdRecords[0]);
 }
 
+function edit(reservation_id, reservation) {
+
+    const first_name = reservation.first_name;
+    const last_name = reservation.last_name;
+    const mobile_number = reservation.mobile_number;
+    const reservation_date = reservation.reservation_date;
+    const reservation_time = reservation.reservation_time;
+    const people = reservation.people;
+
+    return knex("reservations")
+        .select("*")
+        .where({ reservation_id })
+        .update({ first_name })
+        .update({ last_name })
+        .update({ mobile_number })
+        .update({ reservation_date })
+        .update({ reservation_time })
+        .update({ people }, "*")
+
+}
+
 function list(date) {
     return knex("reservations")
         .select("*")
@@ -48,6 +69,7 @@ async function update(reservation_id, status) {
 
 module.exports = {
     create,
+    edit,
     list,
     read,
     search,

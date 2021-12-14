@@ -6,7 +6,7 @@ function CreateReservation() {
     return (
         <div>
             {/* Call the Reservation Form HTML */}
-            <ReservationForm isNew={true} />
+            <ReservationForm props={ {isNew: true} }/>
         </div>
     );
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { listReservations, searchReservation } from "../utils/api.js";
+import { cancelReservation, listReservations, searchReservation } from "../utils/api.js";
 
 function ReservationSearch() {
 
@@ -16,6 +16,21 @@ function ReservationSearch() {
           .then(setReservations)
           .catch(setReservationsError);
         return () => abortController.abort();
+    }
+
+    const handleCancelReservation = async function (event) {
+        event.preventDefault();
+        const reservation_id = event.target.value;
+
+        try {
+            const result = window.confirm("Do you want to cancel this reservation? This cannot be undone.");
+            if (result) {
+                await cancelReservation(reservation_id);
+                loadReservations();
+            }
+        } catch(error) {
+            setReservationsError(error);
+        }
     }
 
     const handleChange = function (event) {
@@ -67,7 +82,9 @@ function ReservationSearch() {
                         <th>Time</th>
                         <th># of People</th>
                         <th>Status</th>
-                        <th></th>
+                        <th>Seat?</th>
+                        <th>Edit?</th>
+                        <th>Cancel?</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -94,6 +111,29 @@ function ReservationSearch() {
                                         </button>
                                     </a>
                                 : ""}
+                            </td>
+                            <td>
+                                {/* If the reservation status is booked, display the Edit button */}
+                                {reservation.status === "booked" ?                             
+                                    <a href={`/reservations/${reservation.reservation_id}/edit`}>
+                                        <button className="btn btn-primary ml-2">
+                                            Edit
+                                        </button>
+                                    </a>
+                                : ""}
+                            </td>
+                            <td>
+                                {/* If the reservation status is booked, display the Edit button */}
+                                {reservation.status === "booked" ?                             
+                                        <button 
+                                        className="btn btn-primary ml-2"
+                                        data-reservation-id-cancel={reservation.reservation_id}
+                                        onClick={handleCancelReservation}
+                                        value={reservation.reservation_id}
+                                    >
+                                        Cancel
+                                    </button>
+                                : "" }
                             </td>
                         </tr>
                     )}
