@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { createReservation, editReservation } from "../utils/api";
+
 import ErrorAlert from "../layout/ErrorAlert.js";
 
 function ReservationForm( {props} ) {
@@ -30,22 +31,23 @@ function ReservationForm( {props} ) {
     // Event handler for when creating a reservation
 	const handleSubmit = async function (event) {
 		event.preventDefault();
+        const abortController = new AbortController();
         try {
             // If isNew is true, then createReservation should be called.
             if(isNew) {
-                let result = await createReservation(reservation);
+                let result = await createReservation(reservation, abortController.signal);
                 let reservationDate = result.reservation_date;
                 history.push(`/dashboard?date=${reservationDate}`);
             } else {
                 // If isNew is false, then editReservation should be called.
-                let result = await editReservation(reservation);
+                let result = await editReservation(reservation, abortController.signal);
                 let reservationDate = result.reservation_date;
-                await props.loadDashboard();
-                history.push(`/dashboard?date=${reservationDate}`)
+                await props.loadReservation();
+                history.push(`/dashboard?date=${reservationDate}`);
             }
         } catch(error) {
-            console.log("An error has been caught in the handleSubmit function.")
             setError(error);
+            return () => abortController.abort();
         }
 	};
 
@@ -68,98 +70,152 @@ function ReservationForm( {props} ) {
             <form       
                 onSubmit={handleSubmit}
             >
-                <label>
-                    First Name
-                </label>
-                <input 
-                    id="firstName"
-                    name="first_name"
-                    onChange={handleChange}
-                    type="text"
-                    value={reservation.first_name}
-                />
-                <br></br>
-
-                <label>
-                    Last Name
-                </label>
-                <input 
-                    id="lastName"
-                    type="text"
-                    name="last_name"
-                    onChange={handleChange} 
-                    value={reservation.last_name}
-                />
-                <br></br>
-
-                <label>
-                    Mobile Number
-                </label>
-                <input 
-                    id="mobileNumber"
-                    name="mobile_number"
-                    onChange={handleChange} 
-                    value={reservation.mobile_number}
-                />
-                <br></br>
-
-                <label>
-                    Date of Reservation
-                </label>
-                <input 
-                    id="reservationDate"
-                    type="date"
-                    name="reservation_date" 
-                    onChange={handleChange}
-                    value={reservation.reservation_date}
-                    placeholder="YYYY-MM-DD" 
-                    pattern="\d{4}-\d{2}-\d{2}"
-                />
-                <br></br>
-
-                <label>
-                    Time of Reservation
-                </label>
-                <input 
-                    id="reservationTime"
-                    type="time" 
-                    name="reservation_time" 
-                    onChange={handleChange}
-                    value={reservation.reservation_time}
-                    placeholder="HH:MM" 
-                    pattern="[0-9]{2}:[0-9]{2}"
-                />
-                <br></br>
-
-                <label>
-                    Number of People in Party
-                </label>
-                <input 
-                    id="partyPeople"
-                    name="people" 
-                    onChange={handleChange}
-                    value={reservation.people}
-                />
-                <br></br>
-
-                <button 
-                    className="btn btn-primary ml-2" 
-                    type="submit"
-                >
-                    Submit
-                </button> 
-
-                <button 
-                    className="btn btn-secondary" 
-                    /* On Click, use anonymous event handlerto go back one page in history */
-					onClick={(e) => {
-						e.preventDefault();
-						history.go(-1);
-					}}
-                >
-                    Cancel
-                </button>
-   
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="2">
+                                {isNew ? 
+                                <h1>Make a Reservation</h1>
+                                : <h1>Edit a Reservation</h1> }
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {/* Table row for first_name and last_name labels */}
+                        <tr>
+                            <td>
+                                <label>
+                                    First Name
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    Last Name
+                                </label>
+                            </td>
+                        </tr>
+                        {/* Table row for first_name and last_name inputs */}
+                        <tr>
+                            <td>
+                                <input 
+                                    id="firstName"
+                                    name="first_name"
+                                    onChange={handleChange}
+                                    type="text"
+                                    value={reservation.first_name}
+                                />
+                            </td>
+                            <td>
+                                <input 
+                                    id="lastName"
+                                    type="text"
+                                    name="last_name"
+                                    onChange={handleChange} 
+                                    value={reservation.last_name}
+                                />
+                            </td>
+                        </tr>
+                        {/* Table row for mobile_number and people labels */}
+                        <tr>
+                            <td>
+                                <label>
+                                    Mobile Number
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    Number of People in Party
+                                </label>
+                            </td>
+                        </tr>
+                        {/* Table row for mobile_number and people inputs*/}
+                        <tr>
+                            <td>
+                                <input 
+                                    id="mobileNumber"
+                                    name="mobile_number"
+                                    onChange={handleChange} 
+                                    value={reservation.mobile_number}
+                                />
+                            </td>
+                            <td>
+                                <input 
+                                    id="partyPeople"
+                                    name="people" 
+                                    onChange={handleChange}
+                                    value={reservation.people}
+                                />
+                            </td>
+                        </tr>
+                        {/* Table row for date and time labels */}
+                        <tr>
+                            <td>
+                                <label>
+                                    Date of Reservation
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    Time of Reservation
+                                </label>
+                            </td>
+                        </tr>
+                        {/* Table row for date and time inputs */}
+                        <tr>
+                            <td>
+                                <input 
+                                    id="reservationDate"
+                                    type="date"
+                                    name="reservation_date" 
+                                    onChange={handleChange}
+                                    value={reservation.reservation_date}
+                                    placeholder="YYYY-MM-DD" 
+                                    pattern="\d{4}-\d{2}-\d{2}"
+                                />
+                            </td>
+                            <td>
+                                <input 
+                                    id="reservationTime"
+                                    type="time" 
+                                    name="reservation_time" 
+                                    onChange={handleChange}
+                                    value={reservation.reservation_time}
+                                    placeholder="HH:MM" 
+                                    pattern="[0-9]{2}:[0-9]{2}"
+                                />
+                            </td>
+                        </tr>
+                        {/* Empty table row to provide space between inputs and buttons */}
+                        <tr>
+                            <td>
+                                <br />
+                            </td>
+                        </tr>
+                        {/* Table Row for the buttons */}
+                        <tr>
+                            <td>
+                                <button 
+                                    className="btn btn-primary ml-2" 
+                                    type="submit"
+                                >
+                                    Submit
+                                </button>
+                            </td>
+                            <td>
+                                <button 
+                                    className="btn btn-secondary" 
+                                    /* On Click, use anonymous event handlerto go back one page in history */
+					                onClick={(e) => {
+						                e.preventDefault();
+						                history.go(-1);
+					                }}
+                                >
+                                    Cancel
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </form> {/* End of Form for modifying or creating a reservation */}
         </div>
     );

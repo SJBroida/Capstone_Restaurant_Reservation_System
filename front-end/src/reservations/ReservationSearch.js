@@ -39,11 +39,13 @@ function ReservationSearch() {
 
     const handleSearchSubmit = async function (event) {
 		event.preventDefault();
+        const abortController = new AbortController();
         try {
-            await searchReservation(mobileNumber);
+            await searchReservation(mobileNumber, abortController.signal);
             loadReservations();
         } catch(error) {
             setReservationsError(error);
+            return () => abortController.abort();
         }
 	};
 
@@ -79,6 +81,7 @@ function ReservationSearch() {
                         <th>First Name</th>
                         <th>Last Name</th>
                         <th>Mobile #</th>
+                        <th>Date</th>
                         <th>Time</th>
                         <th># of People</th>
                         <th>Status</th>
@@ -88,19 +91,15 @@ function ReservationSearch() {
                     </tr>
                 </thead>
                 <tbody>
-                    {reservations.length === 0 ? 
-                        <tr>
-                            <td>
-                                <h2>No reservations found</h2>
-                            </td>
-                        </tr>
+                    {reservations.length === 0 ? ""
                     : reservations.map((reservation) => 
                         <tr key={reservation.reservation_id}>
                             <td> {reservation.first_name} </td>
                             <td> {reservation.last_name} </td>
                             <td> {reservation.mobile_number} </td>
-                            <td> {reservation.reservation_time}</td>
-                            <td> {reservation.people}</td>
+                            <td> {reservation.reservation_date} </td>
+                            <td> {reservation.reservation_time} </td>
+                            <td> {reservation.people} </td>
                             <td data-reservation-id-status={reservation.reservation_id}> {reservation.status} </td>
                             <td>
                                 {/* If the reservation status is booked, display the Seat button */}
@@ -139,6 +138,9 @@ function ReservationSearch() {
                     )}
                 </tbody>
             </table>
+            {reservations.length === 0 ? 
+                <h2>No reservations found</h2> 
+            : "" }
         </div>
     );
 

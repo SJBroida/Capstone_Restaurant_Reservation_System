@@ -39,7 +39,7 @@ async function reservationExists(req, res, next) {
  * @param {*} next 
  * @returns 
  */
-async function reservationValid(req, res, next) {
+function reservationValid(req, res, next) {
 
   if(!req.body.data) {
     return next({ status: 400, message: `data is missing` });
@@ -101,7 +101,7 @@ async function reservationValid(req, res, next) {
  * @param {*} next 
  * @returns 
  */
-async function validFuture(req, res, next) {
+function validFuture(req, res, next) {
   // Create an array to store any errors in case the reservation is invalid
   const errorsArray = [];
 
@@ -182,7 +182,7 @@ function validStatus(req, res, next) {
  * @param {*} next 
  * @returns 
  */
-async function validTime(req, res, next) {
+function validTime(req, res, next) {
   // Create an array to store any errors in case the reservation is invalid
   const errorsArray = [];
 

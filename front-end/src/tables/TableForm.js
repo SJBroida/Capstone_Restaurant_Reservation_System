@@ -27,13 +27,15 @@ function TableForm({
     // Event handler for when creating a table
 	const handleCreateSubmit = async function (event) {
 		event.preventDefault();
+        const abortController = new AbortController();
         try {
             // Note, this is when the API is called to the back end.
-            await createTable(table);
+            await createTable(table, abortController.signal);
             // Make sure that after submitting, the page is redirected correctly.
             history.push(`/dashboard`);
         } catch(error) {
             setError(error);
+            return () => abortController.abort();
         }
 	};
 
@@ -53,47 +55,79 @@ function TableForm({
                 /* Determine which event handler to use when form is submitted */
                 onSubmit={handleCreateSubmit}
             >
-                <label>
-                    Table Name
-                </label>
-                <input 
-                    id="tableName"
-                    type="text"
-                    name="table_name"
-                    onChange={handleChange} 
-                    value={table.table_name}
-                />
-                <br></br>
-
-                <label>
-                    Table Capacity
-                </label>
-                <input 
-                    id="tableCapacity"
-                    name="capacity" 
-                    onChange={handleChange}
-                    value={table.capacity}
-                />
-                <br></br>
-
-                <button 
-                    className="btn btn-primary ml-2" 
-                    type="submit"
-                >
-                    Submit
-                </button> 
-
-                <button 
-                    className="btn btn-secondary" 
-                    /* On Click, use anonymous event handlerto go back one page in history */
-					onClick={(e) => {
-						e.preventDefault();
-						history.go(-1);
-					}}
-                >
-                    Cancel
-                </button>
-   
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="2">
+                                <h1>Make a Table</h1>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {/* Table row for labels */}
+                        <tr>
+                            <td>
+                                <label>
+                                    Table Name
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    Table Capacity
+                                </label>
+                            </td>
+                        </tr>
+                        {/* Table row for inputs */}
+                        <tr>
+                            <td>
+                                <input 
+                                    id="tableName"
+                                    type="text"
+                                    name="table_name"
+                                    onChange={handleChange} 
+                                    value={table.table_name}
+                                />
+                            </td>
+                            <td>
+                                <input 
+                                    id="tableCapacity"
+                                    name="capacity" 
+                                    onChange={handleChange}
+                                    value={table.capacity}
+                                />
+                            </td>
+                        </tr>
+                        {/* Empty Table Row to separate inputs and buttons */}
+                        <tr>
+                            <td>
+                                <br />
+                            </td>
+                        </tr>
+                        {/* Table row for buttons */}
+                        <tr>
+                            <td>
+                                <button 
+                                    className="btn btn-primary ml-2" 
+                                    type="submit"
+                                >
+                                    Submit
+                                </button> 
+                            </td>
+                            <td>
+                                <button 
+                                    className="btn btn-secondary" 
+                                    /* On Click, use anonymous event handlerto go back one page in history */
+					                onClick={(e) => {
+						                e.preventDefault();
+						                history.go(-1);
+					                }}
+                                >
+                                    Cancel
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </form> {/* End of Form for modifying or creating a table */}
         </div>
     );

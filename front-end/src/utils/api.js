@@ -59,6 +59,13 @@ async function fetchJson(url, options, onCancel) {
  * API calls for the "reservations" table in the database
  */
 
+/**
+ * Changes status of a reservation to "cancelled"
+ * @param {*} reservation_id 
+ *  The reservation ID of the reservation to be cancelled.
+ * @param {*} signal 
+ * @returns 
+ */
 export async function cancelReservation(reservation_id, signal) {
   const url = `${API_BASE_URL}/reservations/${reservation_id}/status`;
   const options = {
@@ -88,7 +95,9 @@ export async function cancelReservation(reservation_id, signal) {
     body: JSON.stringify( { data: reservation } ),
     signal,
   };
-  return await fetchJson(url, options, {});
+  return await fetchJson(url, options, {})
+  .then(formatReservationDate)
+  .then(formatReservationTime);
 }
 
 export async function editReservation(reservation, signal) {
@@ -99,7 +108,9 @@ export async function editReservation(reservation, signal) {
     body: JSON.stringify( { data: reservation } ),
     signal,
   };
-  return await fetchJson(url, options, {});
+  return await fetchJson(url, options, {})
+    .then(formatReservationDate)
+    .then(formatReservationTime);
 }
 
 export async function findReservation(reservation_id, signal) {

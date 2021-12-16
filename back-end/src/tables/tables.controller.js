@@ -9,7 +9,7 @@ const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
  * @param {*} next 
  * @returns 
  */
-async function tableValid(req, res, next) {
+function tableValid(req, res, next) {
 
     if(!req.body.data) {
       return next({ status: 400, message: `data is missing` });

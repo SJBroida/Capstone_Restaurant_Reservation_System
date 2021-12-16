@@ -2,3 +2,19 @@
   background-color: #393a44;
   min-width: 200px;
 }
+
+table {
+  text-align: center;
+}
+
+td {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+th{
+  border-bottom-style: solid;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+

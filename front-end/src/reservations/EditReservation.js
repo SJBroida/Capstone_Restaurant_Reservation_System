@@ -29,7 +29,7 @@ function EditReservation({ loadDashboard }) {
         <div>
             {/* Call the Reservation Form HTML */}
             <ReservationForm 
-                props={ {isNew: false, passedReservation: reservation, loadDashboard} } 
+                props={ {isNew: false, passedReservation: reservation, loadReservation} } 
             />
         </div>
     );

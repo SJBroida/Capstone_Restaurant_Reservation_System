@@ -21,12 +21,7 @@ function edit(reservation_id, reservation) {
     return knex("reservations")
         .select("*")
         .where({ reservation_id })
-        .update({ first_name })
-        .update({ last_name })
-        .update({ mobile_number })
-        .update({ reservation_date })
-        .update({ reservation_time })
-        .update({ people }, "*")
+        .update({ first_name, last_name, mobile_number, reservation_date, reservation_time, people }, "*")
 
 }
 
